@@ -37,41 +37,20 @@ function relevanssi_premium_snowball_stemmer_tab( $tabs ) {
  * unlikely to change in the future.
  */
 function relevanssi_premium_snowball_stemmer_render_tab() {
-	$languages = array(
-		'catalá (Catalan)'       => 'ca',
-		'dansk (Danish)'         => 'da',
-		'Deutsch (German)'       => 'de',
-		'English'                => 'en',
-		'español (Spanish)'      => 'es',
-		'français (French)'      => 'fr',
-		'italiano (Italian)'     => 'it',
-		'Nederlands (Dutch)'     => 'nl',
-		'norsk (Norwegian)'      => 'no',
-		'português (Portuguese)' => 'pt',
-		'românește (Romanian)'   => 'ro',
-		'русский язык (Russian)' => 'ru',
-		'suomi (Finnish)'        => 'fi',
-		'svensk (Swedish)'       => 'sv',
-	);
+	$languages = relevanssi_premium_snowball_stemmer_languages();
+	$stemmer_languages = array_values( $languages );
 
 	if ( ! empty( $_REQUEST ) && isset( $_REQUEST['submit'] ) ) {
 		check_admin_referer( 'save_options', 'relevanssi_premium_snowball_stemmer' );
-		$language = $_REQUEST['relevanssi_premium_snowball_language'];
-		if ( in_array( $language, $languages, true ) ) {
-			update_option( 'relevanssi_premium_snowball_stemmer_language', $language );
+
+		// Only save settings if Polylang is not active
+		if ( !function_exists( 'pll_languages_list' ) ) {
+			$language = $_REQUEST['relevanssi_premium_snowball_language'];
+			if ( in_array( $language, $stemmer_languages, true ) ) {
+				update_option( 'relevanssi_premium_snowball_stemmer_language', $language );
+			}
 		}
 	}
-
-	$selected_language = get_option( 'relevanssi_premium_snowball_stemmer_language', 'en' );
-
-	$language_options = array_map(
-		function( $key, $value ) use ( $selected_language ) {
-			$selected = $selected_language === $value ? "selected='selected'" : '';
-			return "<option value='$value' $selected>$key</option>";
-		},
-		array_keys( $languages ),
-		$languages
-	);
 
 	?>
 	<div class="wrap">
@@ -79,14 +58,40 @@ function relevanssi_premium_snowball_stemmer_render_tab() {
 
 		<h3 id="stemmer"><?php esc_html_e( 'Snowball Stemmer', 'relevanssi_premium_snowball_stemmer' ); ?></h3>
 
-		<p><?php esc_html_e( 'Choose the language here and then rebuild the index on the Indexing tab. Once you do that, all words in the posts and all search terms are stemmed, making it easier to find posts with varying word forms. The search term highlighting does not support stemming at the moment, so highlighting will only work when the search term matches the word form in the post.', 'relevanssi_premium_snowball_stemmer' ); ?></p>
+		<?php if ( function_exists( 'pll_languages_list' ) ) : ?>
+			<p><strong><?php esc_html_e( 'Polylang is active. Stemmer language settings are automatically managed based on Polylang language settings.', 'relevanssi_premium_snowball_stemmer' ); ?></strong></p>
 
-		<p><?php esc_html_e( 'Choose the language', 'relevanssi_premium_snowball_stemmer' ); ?>:
-		<select name="relevanssi_premium_snowball_language" id="relevanssi_premium_snowball_language">
-			<?php echo implode( "\n", $language_options ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
-		</select>
-		</p>
-
+			<?php
+			$pll_languages = pll_languages_list( array( 'fields' => 'names' ) );
+			$pll_codes = pll_languages_list();
+			foreach ( array_combine( $pll_codes, $pll_languages ) as $lang_code => $lang_name ) :
+				$is_supported = in_array( $lang_code, $stemmer_languages, true );
+				?>
+				<p>
+					<?php
+					echo esc_html( sprintf(
+						__( '%s (%s): %s', 'relevanssi_premium_snowball_stemmer' ),
+						$lang_name,
+						$lang_code,
+						$is_supported ? __('Stemming enabled', 'relevanssi_premium_snowball_stemmer') : __('Stemming not available', 'relevanssi_premium_snowball_stemmer')
+					) );
+					?>
+				</p>
+			<?php endforeach; ?>
+		<?php else : ?>
+			<p><?php esc_html_e( 'Choose the language', 'relevanssi_premium_snowball_stemmer' ); ?>:
+			<select name="relevanssi_premium_snowball_language">
+				<?php
+				$selected_languages = get_option( 'relevanssi_premium_snowball_stemmer_language' );
+				$selected_language = is_array( $selected_languages ) ? 'en' : $selected_languages;
+				foreach ( $languages as $name => $code ) {
+					$selected = $selected_language === $code ? "selected='selected'" : '';
+					echo "<option value='" . esc_attr( $code ) . "' $selected>" . esc_html( $name ) . "</option>";
+				}
+				?>
+			</select>
+			</p>
+		<?php endif; ?>
 	</div>
 	<?php
 }

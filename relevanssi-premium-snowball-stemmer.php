@@ -21,9 +21,33 @@
  * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  */
 
-add_filter( 'relevanssi_stemmer', 'relevanssi_premium_snowball_stemmer' );
+/**
+ * Returns the available stemmer languages.
+ *
+ * @return array Array of stemmer languages with display names as keys and codes as values.
+ */
+function relevanssi_premium_snowball_stemmer_languages() {
+	return array(
+		'catalá (Catalan)'       => 'ca',
+		'dansk (Danish)'         => 'da',
+		'Deutsch (German)'       => 'de',
+		'English'                => 'en',
+		'español (Spanish)'      => 'es',
+		'français (French)'      => 'fr',
+		'italiano (Italian)'     => 'it',
+		'Nederlands (Dutch)'     => 'nl',
+		'norsk (Norwegian)'      => 'no',
+		'português (Portuguese)' => 'pt',
+		'românește (Romanian)'   => 'ro',
+		'русский язык (Russian)' => 'ru',
+		'suomi (Finnish)'        => 'fi',
+		'svensk (Swedish)'       => 'sv',
+	);
+}
 
-require 'admin-menu.php';
+require plugin_dir_path( __FILE__ ) . 'admin-menu.php';
+
+add_filter( 'relevanssi_stemmer', 'relevanssi_premium_snowball_stemmer' );
 
 /**
  * Does the actual stemming. Gets the language from the option
@@ -34,11 +58,27 @@ require 'admin-menu.php';
  * @return string The stemmed word.
  */
 function relevanssi_premium_snowball_stemmer( $word ) {
-    if ( file_exists( plugin_dir_path( __FILE__ ) . 'vendor/autoload.php' ) ) {
-        require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
-    }
+	if ( file_exists( plugin_dir_path( __FILE__ ) . 'vendor/autoload.php' ) ) {
+		require plugin_dir_path( __FILE__ ) . 'vendor/autoload.php';
+	}
 
-	$language = get_option( 'relevanssi_premium_snowball_stemmer_language', 'en' );
+	$stemmer_languages = array_values( relevanssi_premium_snowball_stemmer_languages() );
+
+	// If Polylang is active, use the current language.
+	if ( function_exists( 'pll_current_language' ) ) {
+		$current_lang = pll_current_language();
+
+		// Only proceed if the current language is supported by the stemmer
+		if ( !in_array( $current_lang, $stemmer_languages, true ) ) {
+			return $word;
+		}
+		$language = $current_lang;
+	} else {
+		// Non-Polylang sites use the saved setting.
+		$selected_languages = get_option( 'relevanssi_premium_snowball_stemmer_language' );
+		$language = in_array( $selected_languages, $stemmer_languages, true ) ? $selected_languages : 'en';
+	}
+
 	try {
 		$stemmer = Wamania\Snowball\StemmerFactory::create( $language );
 	} catch ( Wamania\Snowball\NotFoundException $e ) {
