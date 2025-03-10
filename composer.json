@@ -1,22 +1,38 @@
 {
-    "name": "msaari/relevanssi-premium-snowball-stemmer",
-    "description": "Snowball Stemmer for Relevanssi Premium",
-    "type": "wordpress-plugin",
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/wamania/php-stemmer"
-        }
-    ],
-    "require": {
-        "wamania/php-stemmer": "^4.0.0"
-    },
-    "license": "GPLv2",
-    "authors": [
-        {
-            "name": "Mikko Saari",
-            "email": "mikko@mikkosaari.fi"
-        }
-    ],
-    "homepage": "https://www.relevanssi.com/snowball-stemmer/"
+	"name": "msaari/relevanssi-premium-snowball-stemmer",
+	"description": "Snowball Stemmer for Relevanssi Premium",
+	"type": "wordpress-plugin",
+	"repositories": [
+		{
+			"type": "vcs",
+			"url": "https://github.com/wamania/php-stemmer"
+		}
+	],
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	},
+	"require": {
+		"wamania/php-stemmer": "^4.0.0"
+	},
+	"require-dev": {
+		"wp-coding-standards/wpcs": "^3.0"
+	},
+	"scripts": {
+		"lint": "vendor/bin/phpcs --standard=phpcs.xml"
+	},
+	"autoload": {
+		"classmap": [
+			"includes/"
+		]
+	},
+	"license": "GPLv2",
+	"authors": [
+		{
+			"name": "Mikko Saari",
+			"email": "mikko@mikkosaari.fi"
+		}
+	],
+	"homepage": "https://www.relevanssi.com/snowball-stemmer/"
 }
