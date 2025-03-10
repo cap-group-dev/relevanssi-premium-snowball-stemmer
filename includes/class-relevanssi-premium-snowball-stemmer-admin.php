@@ -26,7 +26,7 @@ class Relevanssi_Premium_Snowball_Stemmer_Admin {
 	}
 
 	/**
-	 * Initialize the admin class.
+	 * Register hooks.
 	 */
 	public function register_hooks(): void {
 		add_filter( 'relevanssi_tabs', array( $this, 'add_stemmer_tab' ), 20 );
